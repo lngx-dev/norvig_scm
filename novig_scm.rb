@@ -57,6 +57,15 @@ puts "#{atom("one")} #{atom("one").class}" # => one Symbol
 # 最初にトークンのintへの変換を試み、次にfloatへの変換を試み、最後にSymbolへの変換を試みています。
 # ここでは、rescue節でretryを使うことでコードを簡潔にしました。
 # ただSymbolという関数メソッドが未定義なのでこれを用意しています。
+
+
+# *** パーサ・インタフェース ***
+def read(s)
+  read_from tokenize(s)
+end
+alias :parse :read
+# tokenize, read_from を統合したパーサのインタフェースはこのようになります。
+
 # *** 実行 ***
 tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
 print "tokens: "
@@ -65,3 +74,7 @@ p tokens
 parsed_tokens = read_from(tokens)
 print "parsed_tokens: "
 p parsed_tokens
+
+p parse("(+ 3 (* 4 5))")
+p parse("(define plus1 (lambda (n) (+ n 1)))")
+p parse("(define area (lambda (r) (* 3.141592653 (* r r))))")
