@@ -137,6 +137,37 @@ end
 # 外部環境outerはオブジェクトの外からアクセスする必要はないので、インスタンス変数@outerに保持します。
 
 
+# *** グローバル環境オブジェクト ***
+$global_env = Env.new.merge!(
+  :+       => ->x, y {x + y},
+  :-       => ->x, y {x - y},
+  :*       => ->x, y {x * y},
+  :/       => ->x, y {x / y},
+  :not     => ->x    {!x},
+  :>       => ->x, y {x > y},
+  :<       => ->x, y {x < y},
+  :>=      => ->x, y {x >= y},
+  :<=      => ->x, y {x <= y},
+  :'='     => ->x, y {x == y},
+  :equal?  => ->x, y {x.equal?(y)},
+  :eq?     => ->x, y {x.eql? y},
+  :length  => ->x    {x.length},
+  :cons    => ->x, y {[x,y]},
+  :car     => ->x    {x[0]},
+  :cdr     => ->x    {x[1..-1]},
+  :append  => ->x, y {x+y},
+  :list    => ->*x   {[*x]},
+  :list?   => ->x    {x.instance_of?(Array)},
+  :null?   => ->x    {x.empty?},
+  :symbol? => ->x    {x.instance_of?(Symbol)}
+)
+# 環境クラスが定義できたのでこれを使ってグローバル環境オブジェクトを生成します。
+# グローバル環境にはSchemeの組込み手続きを含めます。
+# この外部環境オブジェクトはグローバル変数global_envで参照できるようにセットされ、
+# その結果どこからでもアクセスできるようになります。
+# すべてlambdaで生成しています。Ruby1.9で導入された->表記がこういうところでは便利です。
+
+
 # *** 実行 ***
 tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
 print "tokens: "
