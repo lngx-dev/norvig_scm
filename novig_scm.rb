@@ -66,6 +66,53 @@ end
 alias :parse :read
 # tokenize, read_from を統合したパーサのインタフェースはこのようになります。
 
+
+# *** 評価(eval) ***
+def evaluate(x, env=$global_env)
+  case x
+  when Symbol       # 1. ref variable
+    env.find(x)[x]
+  when Array        # 2. in list
+    case x.first
+    when :quote     #     2-1. (quoto exp)
+      _, exp = x
+      exp
+    when :if        #     2-2. (if test conseq alt)
+      _, test, conseq, alt = x
+      evaluate((evaluate(test, env) ? conseq : alt), env)
+    when :set!      #     2-3. (set! var exp)
+      _, var, exp = x
+      env.find(var)[var] = evaluate(exp, env)
+    when :define    #     2-4. (defaine var exp)
+      _, var, exp = x
+      env[var] = evaluate(exp, env)
+      nil
+    when :lambda    #     2-5. (lambda (var*) exp)
+      _, vars, exp = x
+      lambda { |*args| evaluate(exp, Env.new(vars, args, env)) }
+    when :begin     #     2-6. (begin exp*)
+      x[1..-1].inject(nil) { |val, exp| val = evaluate(exp, env) }
+    else            #     2-7. (proc exp*)
+      proc, *exps = x.inject([]) { |mem, exp| mem << evaluate(exp, env) }
+      proc[*exps]
+    end
+  else              # 3. const literal
+    x
+  end
+end
+# evalの中身はif文による上記の9ケースの場合分け処理になっています。
+# evalに与えられた内部表現(パースされたプログラム文字列)がリストである場合、
+# 特殊形式の何れかの処理でその構成要素が再帰的にeval処理されます。
+# そしてeval対象がシンボルであれば、環境を定義したenvオブジェクトを参照してその実体を返します。
+# シンボルでもリストでもない場合は、数字などの定数としてそのまま返します。
+# eval対象が特殊形式でないリストである場合(8. else節)、これを手続きとしてその内容を実行します。
+# なおevalの第２引数は環境オブジェクトenvを取ります。
+# これは内部表現を評価する際にそれが定義された環境を区別する必要があるためです。
+# これによってローカル変数がグローバルに評価されるようなことがなくなります。
+# 初期値はグローバル環境にセットされます。
+# proc[exps]はproc.call(exps)と等価でprocの実行です。
+
+
 # *** 実行 ***
 tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
 print "tokens: "
