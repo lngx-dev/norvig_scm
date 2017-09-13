@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # coding: utf-8
 
 # *** トークン生成 ***
@@ -50,9 +51,6 @@ def atom(token, type=[:Integer, :Float, :Symbol])
 rescue ArgumentError
   retry
 end
-puts "#{atom("1")}   #{atom("1").class}"   # => 1   Integer
-puts "#{atom("1.1")} #{atom("1.1").class}" # => 1.1 Float
-puts "#{atom("one")} #{atom("one").class}" # => one Symbol
 # 次にトークンをインタプリタの表現に変換する関数atomを見ます。
 # 最初にトークンのintへの変換を試み、次にfloatへの変換を試み、最後にSymbolへの変換を試みています。
 # ここでは、rescue節でretryを使うことでコードを簡潔にしました。
@@ -169,14 +167,24 @@ $global_env = Env.new.merge!(
 
 
 # *** 実行 ***
-tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
-print "tokens: "
-p tokens
+if __FILE__ == $0
+  unless ARGV[0] == "test"
+    repl
+  else
+    tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
+    print "tokens: "
+    p tokens
 
-parsed_tokens = read_from(tokens)
-print "parsed_tokens: "
-p parsed_tokens
+    puts "#{atom("1")}   #{atom("1").class}"   # => 1   Integer
+    puts "#{atom("1.1")} #{atom("1.1").class}" # => 1.1 Float
+    puts "#{atom("one")} #{atom("one").class}" # => one Symbol
 
-p parse("(+ 3 (* 4 5))")
-p parse("(define plus1 (lambda (n) (+ n 1)))")
-p parse("(define area (lambda (r) (* 3.141592653 (* r r))))")
+    parsed_tokens = read_from(tokens)
+    print "parsed_tokens: "
+    p parsed_tokens
+
+    p parse("(+ 3 (* 4 5))")
+    p parse("(define plus1 (lambda (n) (+ n 1)))")
+    p parse("(define area (lambda (r) (* 3.141592653 (* r r))))")
+  end
+end
