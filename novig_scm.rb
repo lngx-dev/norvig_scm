@@ -4,10 +4,8 @@
 def tokenize(s)
   s.gsub(/[()]/, ' \0 ').split
 end
-tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
-#=> ["(", "define", "plus1", "(", "lambda", "(", "n", ")", "(", "+", "n", "1", ")", ")", ")"]
-print "tokens: "
-p tokens
+# tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
+# => ["(", "define", "plus1", "(", "lambda", "(", "n", ")", "(", "+", "n", "1", ")", ")", ")"]
 # パーサはまず読込んだプログラムの文字列をその構文要素であるトークン(token)に分割します。
 # カッコの前後に空白を挿入してsplitによる分割がうまくいくように前処理している点がポイントです。
 # String#gsubに正規表現を渡すことで両カッコの前処理を一度にしています。
@@ -31,10 +29,8 @@ def read_from(tokens)
     token
   end
 end
-parsed_tokens = read_from(tokens)
-# => parsed_tokens: ["define", "plus1", ["lambda", ["n"], ["+", "n", "1"]]]
-print "parsed_tokens: "
-p parsed_tokens
+# parsed_tokens = read_from(tokens)
+# => ["define", "plus1", ["lambda", ["n"], ["+", "n", "1"]]]
 # 基本的にread_fromはトークンのリストを受け取り、先頭から１つづつ再帰的にトークンを解析します。
 # 具体的にはその先頭が開きカッコか否かを判定します。
 # そうでない場合それは数かシンボルなのでelse節のatomでトークンをrubyの対応する表現に変換して返します。
@@ -44,3 +40,13 @@ p parsed_tokens
 # そうでない場合はatomでreadの表現に変換されます。
 # このコードは再帰を使ったエレガントで強力なアルゴリズムです。以上の処理によりschemeのリストはrubyのリストに変換されます。
 # RubyではSchemeのリスト、数、シンボルをそれぞれRubyのArray、数、シンボルで表現します。
+
+
+# *** 実行 ***
+tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
+print "tokens: "
+p tokens
+
+parsed_tokens = read_from(tokens)
+print "parsed_tokens: "
+p parsed_tokens
