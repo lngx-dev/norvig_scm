@@ -25,8 +25,7 @@ def read_from(tokens)
   when ')'
     raise SyntaxError, 'unexpected )'
   else
-    #atom(token) # next step
-    token
+    atom(token)
   end
 end
 # parsed_tokens = read_from(tokens)
@@ -42,6 +41,22 @@ end
 # RubyではSchemeのリスト、数、シンボルをそれぞれRubyのArray、数、シンボルで表現します。
 
 
+# *** トークン変換 ***
+module Kernel
+  def Symbol(obj); obj.intern end
+end
+def atom(token, type=[:Integer, :Float, :Symbol])
+  send(type.shift, token)
+rescue ArgumentError
+  retry
+end
+puts "#{atom("1")}   #{atom("1").class}"   # => 1   Integer
+puts "#{atom("1.1")} #{atom("1.1").class}" # => 1.1 Float
+puts "#{atom("one")} #{atom("one").class}" # => one Symbol
+# 次にトークンをインタプリタの表現に変換する関数atomを見ます。
+# 最初にトークンのintへの変換を試み、次にfloatへの変換を試み、最後にSymbolへの変換を試みています。
+# ここでは、rescue節でretryを使うことでコードを簡潔にしました。
+# ただSymbolという関数メソッドが未定義なのでこれを用意しています。
 # *** 実行 ***
 tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
 print "tokens: "
