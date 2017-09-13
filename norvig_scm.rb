@@ -68,33 +68,33 @@ alias :parse :read
 # *** 評価(eval) ***
 def evaluate(x, env=$global_env)
   case x
-  when Symbol       # 1. ref variable
+  when Symbol       # ------------------------------ 1. ref variable
     env.find(x)[x]
-  when Array        # 2. in list
+  when Array        # ------------------------------ 2. in list
     case x.first
-    when :quote     #     2-1. (quoto exp)
+    when :quote     # ------------------------------   2-1. (quoto exp)
       _, exp = x
       exp
-    when :if        #     2-2. (if test conseq alt)
+    when :if        # ------------------------------   2-2. (if test conseq alt)
       _, test, conseq, alt = x
       evaluate((evaluate(test, env) ? conseq : alt), env)
-    when :set!      #     2-3. (set! var exp)
+    when :set!      # ------------------------------   2-3. (set! var exp)
       _, var, exp = x
       env.find(var)[var] = evaluate(exp, env)
-    when :define    #     2-4. (defaine var exp)
+    when :define    # ------------------------------   2-4. (defaine var exp)
       _, var, exp = x
       env[var] = evaluate(exp, env)
       nil
-    when :lambda    #     2-5. (lambda (var*) exp)
+    when :lambda    # ------------------------------   2-5. (lambda (var*) exp)
       _, vars, exp = x
       lambda { |*args| evaluate(exp, Env.new(vars, args, env)) }
-    when :begin     #     2-6. (begin exp*)
+    when :begin     # ------------------------------   2-6. (begin exp*)
       x[1..-1].inject(nil) { |val, exp| val = evaluate(exp, env) }
-    else            #     2-7. (proc exp*)
+    else            # ------------------------------   2-7. (proc exp*)
       proc, *exps = x.inject([]) { |mem, exp| mem << evaluate(exp, env) }
       proc[*exps]
     end
-  else              # 3. const literal
+  else              # ------------------------------ 3. const literal
     x
   end
 end
@@ -191,20 +191,41 @@ if __FILE__ == $0
   unless ARGV[0] == "test"
     repl
   else
+    puts "----------[ Generate Token ]----------"
     tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
     print "tokens: "
     p tokens
+    puts
 
-    puts "#{atom("1")}   #{atom("1").class}"   # => 1   Integer
-    puts "#{atom("1.1")} #{atom("1.1").class}" # => 1.1 Float
-    puts "#{atom("one")} #{atom("one").class}" # => one Symbol
-
+    puts "----------[ Parse Token ]----------"
     parsed_tokens = read_from(tokens)
     print "parsed_tokens: "
     p parsed_tokens
+    puts
 
+    puts "----------[ Transform Token ]----------"
+    puts "#{atom("1")}   #{atom("1").class}"   # => 1   Integer
+    puts "#{atom("1.1")} #{atom("1.1").class}" # => 1.1 Float
+    puts "#{atom("one")} #{atom("one").class}" # => one Symbol
+    puts
+
+    puts "----------[ Parser Interface ]----------"
     p parse("(+ 3 (* 4 5))")
     p parse("(define plus1 (lambda (n) (+ n 1)))")
     p parse("(define area (lambda (r) (* 3.141592653 (* r r))))")
+    puts
+
+    puts "----------[ Read / Eval / Print ]----------"
+    puts "> (define area (lambda (r) (* 3.141592653 (* r r))))"
+    to_string(evaluate(parse("(define area (lambda (r) (* 3.141592653 (* r r))))")))
+    puts "> (area 3)"
+    to_string(evaluate(parse("(area 3)")))
+    # => 28.274333877
+    puts "> (define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))"
+    to_string(evaluate(parse("(define fact (lambda (n) (if (<= n 1) 1 (* n (fact (- n 1))))))")))
+    puts "> (fact 10)"
+    to_string(evaluate(parse("(fact 10)")))
+    # => 3628800
+    puts
   end
 end
