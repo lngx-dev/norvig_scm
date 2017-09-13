@@ -113,6 +113,30 @@ end
 # proc[exps]はproc.call(exps)と等価でprocの実行です。
 
 
+# *** 環境クラス定義 ***
+class Env < Hash
+  def initialize(parms=[], args=[], outer=nil)
+    h = Hash[parms.zip(args)]
+    self.merge!(h)
+    @outer = outer
+  end
+
+  def find(key)
+    self.has_key?(key) ? self : @outer.find(key)
+  end
+end
+# 環境クラスENVはハッシュのサブクラスで、オブジェクト生成時に与えられた変数とその実体をハッシュとして保持します。
+# Array#zipメソッドで変数のリストと実体のリストからハッシュを生成しマージします。
+#   [:a, :b].zip([1,2])       => [[:a, 1], [:b, 2]]
+#   Hash[[:a, :b].zip([1,2])] => {:a=>1, :b=>2}
+# そのオブジェクトが内部環境を構築するつまり外部環境を持っている場合、
+# それを第３引数として渡してオブジェクトを生成します。
+# これはeval関数内のlambdaにおける処理で使われています。
+# findメソッドは与えられた変数に対応する実体を返します。
+# その環境で変数が定義されていない場合、その１つ外側の環境で対応する実体を探します。
+# 外部環境outerはオブジェクトの外からアクセスする必要はないので、インスタンス変数@outerに保持します。
+
+
 # *** 実行 ***
 tokens = tokenize "(define plus1 (lambda (n) (+ n 1)))"
 print "tokens: "
