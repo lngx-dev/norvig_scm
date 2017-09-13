@@ -166,6 +166,26 @@ $global_env = Env.new.merge!(
 # すべてlambdaで生成しています。Ruby1.9で導入された->表記がこういうところでは便利です。
 
 
+# *** 対話的Lispインタプリタ ***
+def to_string(exp)
+  puts (exp.instance_of?(Array)) ? '(' + exp.map(&:to_s).join(" ") + ')' : "#{exp}"
+end
+require "readline"
+def repl
+  while line = Readline.readline("> ", true)
+    if line == "!env"
+      puts $global_env; next
+    end
+    ast = parse(line)               # R-ead
+    val = evaluate(ast)             # E-val
+    to_string(val) unless val.nil?  # P-rint
+  end                               # L-oop
+end
+# 最後に対話的インタプリタつまりユーザからSchemeプログラムの入力に対して、
+# その評価結果をLispの文字列にして出力するものを追加します。
+# to_string関数はインタプリタからの出力をLisp形式の文字列に変換します。
+
+
 # *** 実行 ***
 if __FILE__ == $0
   unless ARGV[0] == "test"
